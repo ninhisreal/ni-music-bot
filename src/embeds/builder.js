@@ -11,7 +11,7 @@ import { detectSource } from '../player/youtube-strategy.js';
  * @param {string} [options.thumbnail]
  * @param {string} [options.image]
  * @param {Array}  [options.fields]
- * @param {string} [options.footer]
+ * @param {string|object} [options.footer]
  * @param {string} [options.url]
  * @returns {EmbedBuilder}
  */
@@ -30,7 +30,16 @@ export function baseEmbed({
   if (fields.length) embed.addFields(fields);
   if (url)         embed.setURL(url);
 
-  embed.setFooter({ text: footer || '🎵 Ni Music Bot' });
+  if (footer) {
+    if (typeof footer === 'string') {
+      embed.setFooter({ text: footer });
+    } else if (typeof footer === 'object' && footer.text) {
+      embed.setFooter({ text: String(footer.text), iconURL: footer.iconURL });
+    }
+  } else {
+    embed.setFooter({ text: '🎵 Ni Music Bot' });
+  }
+
   return embed;
 }
 

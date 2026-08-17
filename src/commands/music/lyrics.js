@@ -226,7 +226,7 @@ export default {
         description: truncated,
         url: result.url || undefined,
         thumbnail: result.thumbnail || thumbnail,
-        footer: { text: `Nguồn: ${result.source} • Ni Music Studio Engine` },
+        footer: `Nguồn: ${result.source} • Ni Music Studio Engine`,
       });
 
       return interaction.editReply({ embeds: [embed] });
@@ -270,7 +270,7 @@ export default {
         description: truncated,
         url: result.url || undefined,
         thumbnail: result.thumbnail || thumbnail,
-        footer: { text: `Nguồn: ${result.source} • Ni Music Studio Engine` },
+        footer: `Nguồn: ${result.source} • Ni Music Studio Engine`,
       });
 
       return msg.edit({ content: '', embeds: [embed] });
