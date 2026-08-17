@@ -208,22 +208,23 @@ export async function handleButtonInteraction(interaction) {
         if (!track) return interaction.editReply('❌ Không có bài hát đang phát!');
 
         try {
-          const cleanTitle = track.title.replace(/\([^)]*\)|\[[^\]]*\]/g, '').trim();
-          const result = await fetchLyrics(cleanTitle);
+          const result = await fetchLyrics(track.title, track.author);
           if (!result || !result.lyrics) {
             return interaction.editReply(`❌ Không tìm thấy lời bài hát cho **${track.title}**`);
           }
-          const truncated = result.lyrics.length > 3900 ? result.lyrics.slice(0, 3900) + '...' : result.lyrics;
+          const displayTitle = result.artist ? `${result.title} — ${result.artist}` : result.title;
+          const truncated = result.lyrics.length > 3900 ? result.lyrics.slice(0, 3900) + '\n\n*(Lời bài hát quá dài, đã rút gọn...)*' : result.lyrics;
 
           const embed = baseEmbed({
-            title: `🎵 Lời bài hát: ${result.title}`,
+            title: `📜 Lời bài hát: ${displayTitle}`,
             description: truncated,
-            url: result.url,
-            thumbnail: result.thumbnail,
+            thumbnail: result.thumbnail || track.thumbnail,
+            url: result.url || undefined,
+            footer: { text: `Nguồn: ${result.source} • Ni Music Studio Engine` },
           });
           return interaction.editReply({ embeds: [embed] });
         } catch (err) {
-          return interaction.editReply(`❌ Lỗi khi tìm lời bài hát: ${err.message}`);
+          return interaction.editReply(`❌ Lỗi tải lời bài hát: ${err.message}`);
         }
       }
 
