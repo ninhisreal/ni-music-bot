@@ -14,12 +14,36 @@ import { LIMITS } from '../utils/constants.js';
 
 /** Maps guildId → the current "Now Playing" Discord message */
 const nowPlayingMessages = new Map();
+/** Maps guildId → live progress update interval ID */
+const npUpdateIntervals = new Map();
 
 export function getNowPlayingMessage(guildId) {
   return nowPlayingMessages.get(guildId);
 }
 export function setNowPlayingMessage(guildId, msg) {
   nowPlayingMessages.set(guildId, msg);
+}
+
+/**
+ * Clear the live progress update interval for a guild.
+ */
+function clearNpInterval(guildId) {
+  const interval = npUpdateIntervals.get(guildId);
+  if (interval) {
+    clearInterval(interval);
+    npUpdateIntervals.delete(guildId);
+  }
+}
+
+/**
+ * Delete the old Now Playing message silently (garbage collection).
+ */
+async function deleteOldNpMessage(guildId) {
+  const existing = nowPlayingMessages.get(guildId);
+  if (existing) {
+    try { await existing.delete(); } catch {}
+    nowPlayingMessages.delete(guildId);
+  }
 }
 
 // ─── Memory Management ──────────────────────────────────────────────────
@@ -80,6 +104,10 @@ export function setupPlayerEvents() {
       recordPlay(guildId, track.requestedBy?.id || 'unknown', track);
     } catch {}
 
+    // ── Garbage Collection: Delete old Now Playing message ──────────
+    clearNpInterval(guildId);
+    await deleteOldNpMessage(guildId);
+
     // Build Now Playing embed + buttons
     const embed = buildNowPlayingEmbed(track, queue);
     const row1 = buildPlayerControlsRow(queue);
@@ -87,13 +115,30 @@ export function setupPlayerEvents() {
     const row3 = buildPlayerControlsRow3();
 
     try {
-      const existing = nowPlayingMessages.get(guildId);
-      if (existing?.editable) {
-        await existing.edit({ embeds: [embed], components: [row1, row2, row3] }).catch(() => {});
-      } else {
-        const msg = await channel.send({ embeds: [embed], components: [row1, row2, row3] });
-        nowPlayingMessages.set(guildId, msg);
-      }
+      const msg = await channel.send({ embeds: [embed], components: [row1, row2, row3] });
+      nowPlayingMessages.set(guildId, msg);
+
+      // ── Live Progress Bar Update every 15s ───────────────────────
+      const updateInterval = setInterval(async () => {
+        try {
+          const currentMsg = nowPlayingMessages.get(guildId);
+          if (!currentMsg || !queue.isPlaying() || queue.currentTrack !== track) {
+            clearNpInterval(guildId);
+            return;
+          }
+          const updatedEmbed = buildNowPlayingEmbed(track, queue);
+          const updatedRow1 = buildPlayerControlsRow(queue);
+          await currentMsg.edit({
+            embeds: [updatedEmbed],
+            components: [updatedRow1, row2, row3],
+          }).catch(() => clearNpInterval(guildId));
+        } catch {
+          clearNpInterval(guildId);
+        }
+      }, 15_000);
+
+      if (updateInterval.unref) updateInterval.unref();
+      npUpdateIntervals.set(guildId, updateInterval);
     } catch (err) {
       logger.error('Events', `NowPlaying embed: ${err.message}`);
     }
@@ -124,7 +169,8 @@ export function setupPlayerEvents() {
   // ── Queue finished ─────────────────────────────────────────────────
   player.events.on(GuildQueueEvent.emptyQueue, async (queue) => {
     const guildId = queue.guild.id;
-    nowPlayingMessages.delete(guildId);
+    clearNpInterval(guildId);
+    await deleteOldNpMessage(guildId);
 
     // Try Auto-DJ before announcing empty
     try {
@@ -141,11 +187,12 @@ export function setupPlayerEvents() {
   player.events.on(GuildQueueEvent.emptyChannel, (queue) => {
     const guildId = queue.guild.id;
     logger.info('Events', `Channel empty in ${guildId}, leaving in 2min`);
-    setTimeout(() => {
+    setTimeout(async () => {
       if (queue.connection && !queue.isPlaying()) {
         queue.delete();
         clearSleepTimer(guildId);
-        nowPlayingMessages.delete(guildId);
+        clearNpInterval(guildId);
+        await deleteOldNpMessage(guildId);
         forceGC();
       }
     }, LIMITS.AUTO_LEAVE_MS);

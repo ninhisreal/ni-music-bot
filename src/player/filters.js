@@ -99,6 +99,44 @@ export const FILTERS = {
     type: 'ffmpeg',
     ffmpeg: 'dynaudnorm=f=200:m=10:s=12:g=15',
   },
+  tiktok: {
+    name: 'TikTok Viral (Deep × Bright)',
+    emoji: '📱',
+    type: 'ffmpeg',
+    // Sub-bass slam (25-60Hz) + high-mid scoop + crystal treble shimmer (8-12kHz)
+    // + subtle stereo width + asubboost for felt-not-heard rumble
+    // + loudnorm for TikTok-style aggressive limiting
+    ffmpeg: [
+      'asubboost=dry=0.7:wet=0.3:boost=8:feedback=0.3:cutoff=55:slope=0.5',
+      'equalizer=f=30:t=q:w=0.8:g=7',
+      'equalizer=f=60:t=q:w=1:g=5',
+      'equalizer=f=200:t=q:w=1.5:g=-2',
+      'equalizer=f=800:t=q:w=2:g=-3',
+      'equalizer=f=3000:t=q:w=1.5:g=2',
+      'equalizer=f=8000:t=q:w=1:g=5',
+      'equalizer=f=12000:t=q:w=0.8:g=4',
+      'equalizer=f=16000:t=q:w=0.5:g=3',
+      'stereotools=slev=1.15:mlev=0.9',
+      'loudnorm=I=-14:TP=-1:LRA=7',
+    ].join(','),
+    bands: [
+      { band: 0, gain: 0.45 },
+      { band: 1, gain: 0.40 },
+      { band: 2, gain: 0.20 },
+      { band: 3, gain: -0.10 },
+      { band: 4, gain: -0.15 },
+      { band: 5, gain: -0.10 },
+      { band: 6, gain: 0.05 },
+      { band: 7, gain: 0.10 },
+      { band: 8, gain: 0.15 },
+      { band: 9, gain: 0.20 },
+      { band: 10, gain: 0.25 },
+      { band: 11, gain: 0.30 },
+      { band: 12, gain: 0.35 },
+      { band: 13, gain: 0.30 },
+      { band: 14, gain: 0.25 },
+    ],
+  },
 };
 
 /** Get filter by key. Returns null if not found. */
