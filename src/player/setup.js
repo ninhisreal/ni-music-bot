@@ -1,5 +1,5 @@
 import { Player } from 'discord-player';
-import { YoutubeiExtractor } from 'discord-player-youtubei';
+import ytdl from '@distube/ytdl-core';
 import {
   SpotifyExtractor,
   SoundCloudExtractor,
@@ -7,7 +7,6 @@ import {
   AttachmentExtractor,
 } from '@discord-player/extractor';
 import { logger } from '../utils/logger.js';
-import { config } from '../config.js';
 
 /** @type {Player} */
 let player;
@@ -18,15 +17,12 @@ export function getPlayer() {
 }
 
 /**
- * Studio-Grade Audio Engine v2.5 — High-Definition 48kHz Stereo Pipeline.
+ * Studio-Grade Multi-Platform Audio Engine v3.0.
  *
- * Key Highlights:
- * 1. Studio Resampling (48,000Hz 16-bit Stereo PCM -> High-Bitrate Opus):
- *    Eliminates all crackling, distortion, and packet timing jitter.
- * 2. Uninterrupted Streaming:
- *    32MB highWaterMark prefetch window ensures zero stutter even during network drops.
- * 3. Full DSP Audio Filters Support:
- *    Enables Bass Boost, Nightcore, Vaporwave, Pop, Treble, 8D, and Dynamic Normalizer.
+ * Full-Length Audio Pipeline:
+ * 1. Direct YouTube Streaming (@distube/ytdl-core) -> Full 3-5min songs (No 30s previews).
+ * 2. Multi-Platform Support: YouTube Music, Spotify, Apple Music, Deezer, SoundCloud.
+ * 3. 48kHz HD Opus Resampling via FFmpeg -> Zero crackling, zero stuttering.
  *
  * @param {import('discord.js').Client} client
  */
@@ -35,15 +31,33 @@ export async function setupPlayer(client) {
     skipFFmpeg: false,
     connectionTimeout: 30_000,
     ytdlOptions: {
-      highWaterMark: 1 << 25,   // 32MB large audio prefetch buffer
+      highWaterMark: 1 << 25,   // 32MB prefetch buffer
       quality: 'highestaudio',
       filter: 'audioonly',
       liveBuffer: 10_000,
-      dlChunkSize: 0,           // Continuous streaming to prevent underruns
+      dlChunkSize: 0,
     },
   });
 
-  // Register extractors with SoundCloud prioritized for lossless stream delivery
+  // Direct full-length stream handler for YouTube and bridged tracks
+  player.onBeforeCreateStream(async (track) => {
+    const isYt = track.url?.includes('youtube.com') || track.url?.includes('youtu.be') || track.source === 'youtube' || track.raw?.source === 'youtube';
+    if (isYt && track.url?.startsWith('http')) {
+      try {
+        return ytdl(track.url, {
+          filter: 'audioonly',
+          quality: 'highestaudio',
+          highWaterMark: 1 << 25,
+          dlChunkSize: 0,
+        });
+      } catch (err) {
+        logger.warn('Stream', `ytdl stream error: ${err.message}`);
+      }
+    }
+    return null;
+  });
+
+  // Register native extractors
   const extractors = [
     [SoundCloudExtractor, {}, 'SoundCloud'],
     [SpotifyExtractor, {}, 'Spotify'],
@@ -56,20 +70,6 @@ export async function setupPlayer(client) {
     logger.info('Player', `${name}Extractor ✓`);
   }
 
-  // YouTube / YouTube Music
-  try {
-    await player.extractors.register(YoutubeiExtractor, {
-      authentication: config.ytCookies || undefined,
-      streamOptions: {
-        useClient: 'YTMUSIC',
-        highWaterMark: 1 << 25,
-      },
-    });
-    logger.info('Player', 'YoutubeiExtractor ✓');
-  } catch (err) {
-    logger.warn('Player', `YoutubeiExtractor: ${err.message}`);
-  }
-
-  logger.info('Player', '🎵 Studio-Grade Audio Engine (48kHz HD Opus) ready');
+  logger.info('Player', '🎵 Studio-Grade Full-Length Audio Engine (YouTube + Multi-Platform) ready');
   return player;
 }
