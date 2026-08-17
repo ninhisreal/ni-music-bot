@@ -147,12 +147,13 @@ async function searchSoundCloud(player, query, options = {}) {
 
 const PLATFORM_MAP = {
   deezer: searchDeezer,
-  spotify: searchSpotify,
   applemusic: searchAppleMusic,
+  spotify: searchSpotify,
   soundcloud: searchSoundCloud,
 };
 
-const AUTO_ORDER = ['deezer', 'spotify', 'applemusic', 'soundcloud'];
+// Priority: Deezer > Apple Music > Spotify > SoundCloud (SoundCloud at bottom)
+const AUTO_ORDER = ['deezer', 'applemusic', 'spotify', 'soundcloud'];
 
 /**
  * Unified platform search with exact URL preservation and metadata extraction.
