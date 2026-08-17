@@ -83,7 +83,6 @@ export function detectSource(url) {
 
 /**
  * Resolve title and artist from a YouTube URL using official public oEmbed API.
- * Guaranteed 100% success rate without tokens/cookies or cipher issues.
  */
 export async function resolveYoutubeOEmbed(url) {
   try {
@@ -93,18 +92,15 @@ export async function resolveYoutubeOEmbed(url) {
     const data = await res.json();
     if (!data?.title) return null;
 
-    // Clean common noise tags from YouTube video title
-    const cleanTitle = data.title
-      .replace(/\((Official|Music Video|Audio|Lyric|MV|Video|Album Sampler|Visualizer)[^)]*\)/gi, '')
-      .replace(/\[(Official|Music Video|Audio|Lyric|MV|Video|Album Sampler|Visualizer)[^\]]*\]/gi, '')
-      .replace(/\|.*$/g, '')
-      .replace(/'/g, '')
+    const authorClean = (data.author_name || '')
+      .replace(/\s*-\s*Topic$/i, '')
+      .replace(/Official\s*Channel/i, '')
       .trim();
 
     return {
       title: data.title,
-      searchQuery: cleanTitle || data.title,
-      author: data.author_name || '',
+      author: authorClean,
+      searchQuery: authorClean ? `${data.title} ${authorClean}` : data.title,
       thumbnail: data.thumbnail_url || null,
     };
   } catch {
@@ -193,17 +189,18 @@ async function searchSoundCloud(player, query, options = {}) {
 // ─── Main Search Router ─────────────────────────────────────────────────
 
 const PLATFORM_MAP = {
-  deezer: searchDeezer,
-  spotify: searchSpotify,
-  applemusic: searchAppleMusic,
   youtube: searchYoutubeMusic,
+  spotify: searchSpotify,
+  deezer: searchDeezer,
+  applemusic: searchAppleMusic,
   soundcloud: searchSoundCloud,
 };
 
-const AUTO_ORDER = ['soundcloud', 'deezer', 'spotify', 'applemusic', 'youtube'];
+// Priority: Official clean sources first (YouTube Music > Spotify > Deezer > Apple Music > SoundCloud)
+const AUTO_ORDER = ['youtube', 'spotify', 'deezer', 'applemusic', 'soundcloud'];
 
 /**
- * Unified platform search with URL resolution and LRU caching.
+ * Unified platform search with exact URL preservation and LRU caching.
  *
  * @param {import('discord-player').Player} player
  * @param {string} query
@@ -221,7 +218,24 @@ export async function searchByPlatform(player, query, platform = 'auto', options
 
   // 2. Direct URL Handling
   if (cleanQuery.startsWith('http://') || cleanQuery.startsWith('https://')) {
-    // 2a. Try direct search with registered extractors first
+    // 2a. YouTube URL -> Extract exact video title and preserve exact URL
+    if (cleanQuery.includes('youtube.com') || cleanQuery.includes('youtu.be')) {
+      const oembed = await resolveYoutubeOEmbed(cleanQuery);
+      if (oembed?.title) {
+        const exactTrack = new Track(player, {
+          title: oembed.title,
+          author: oembed.author || 'YouTube',
+          url: cleanQuery,
+          thumbnail: oembed.thumbnail,
+          source: 'youtube',
+          requestedBy: options.requestedBy,
+        });
+        setCache(cacheKey, [exactTrack]);
+        return [exactTrack];
+      }
+    }
+
+    // 2b. Spotify, SoundCloud, Apple, Deezer direct search
     try {
       const res = await player.search(cleanQuery, options);
       if (res.hasTracks()) {
@@ -231,22 +245,6 @@ export async function searchByPlatform(player, query, platform = 'auto', options
       }
     } catch {}
 
-    // 2b. If direct search returned no tracks (e.g. YouTube URL), resolve metadata via oEmbed!
-    if (cleanQuery.includes('youtube.com') || cleanQuery.includes('youtu.be')) {
-      const oembed = await resolveYoutubeOEmbed(cleanQuery);
-      if (oembed?.searchQuery) {
-        logger.info('Search', `Resolved YouTube URL to: "${oembed.searchQuery}"`);
-        for (const p of AUTO_ORDER) {
-          const tracks = await PLATFORM_MAP[p](player, oembed.searchQuery, options);
-          if (tracks.length) {
-            setCache(cacheKey, tracks);
-            return tracks;
-          }
-        }
-      }
-    }
-
-    // Direct URL was unresolvable: DO NOT search literal URL string on platforms!
     return [];
   }
 
@@ -256,7 +254,7 @@ export async function searchByPlatform(player, query, platform = 'auto', options
     if (tracks.length) { setCache(cacheKey, tracks); return tracks; }
   }
 
-  // 4. Auto cascade: SoundCloud → Deezer → Spotify → Apple → YouTube
+  // 4. Auto cascade: YouTube Music → Spotify → Deezer → Apple Music → SoundCloud
   if (platform === 'auto') {
     for (const p of AUTO_ORDER) {
       const tracks = await PLATFORM_MAP[p](player, cleanQuery, options);
@@ -268,8 +266,8 @@ export async function searchByPlatform(player, query, platform = 'auto', options
 }
 
 /**
- * Ensures any Track (especially metadata-only tracks from Apple Music, Deezer, or Raw YouTube)
- * is bridged to an instantly streamable, lossless audio source (SoundCloud) with 100% reliability.
+ * Ensures any Track is bridged to an instantly streamable, lossless audio source
+ * with strict relevance matching to avoid picking random remixes.
  *
  * @param {import('discord-player').Player} player
  * @param {import('discord-player').Track} track
@@ -279,16 +277,18 @@ export async function searchByPlatform(player, query, platform = 'auto', options
 export async function resolvePlayableTrack(player, track, options = {}) {
   if (!track) return null;
 
-  // 1. If it's already an extractor-backed streamable SoundCloud track, play directly!
+  // 1. If it's already an extractor-backed streamable track (e.g. native SoundCloud), return directly
   if (track.extractor && (track.url?.includes('soundcloud.com') || track.raw?.source === 'soundcloud')) {
     return track;
   }
 
-  // 2. If it's a metadata-only track (Deezer, Apple Music, or unextracted YouTube), bridge to SoundCloud
+  // 2. Build clean search queries
   const cleanTitle = (track.title || '')
-    .replace(/\([^)]*\)|\[[^\]]*\]/g, '')
+    .replace(/\((Official|Music Video|Audio|Lyric|MV|Video|Visualizer)[^)]*\)/gi, '')
+    .replace(/\[(Official|Music Video|Audio|Lyric|MV|Video|Visualizer)[^\]]*\]/gi, '')
     .replace(/ft\..*$/i, '')
     .replace(/feat\..*$/i, '')
+    .replace(/[|•-].*$/g, '')
     .trim();
 
   const cleanAuthor = (track.author || '')
@@ -300,9 +300,20 @@ export async function resolvePlayableTrack(player, track, options = {}) {
   const queryFull = `${cleanTitle} ${cleanAuthor}`.trim();
   const queryTitleOnly = cleanTitle || track.title;
 
-  logger.info('Bridge', `Resolving stream for "${track.title}" (${track.raw?.source || 'metadata'}) via SoundCloud...`);
+  logger.info('Bridge', `Resolving stream for "${track.title}" (${track.raw?.source || track.source || 'metadata'})...`);
 
-  // Attempt 1: Title + Artist
+  // Helper to check if a candidate title matches the requested title
+  function isRelevantMatch(candidateTitle, targetTitle) {
+    if (!candidateTitle || !targetTitle) return true;
+    const normCand = candidateTitle.toLowerCase().replace(/[^a-z0-9\s]/gi, '');
+    const normTarget = targetTitle.toLowerCase().replace(/[^a-z0-9\s]/gi, '');
+    const targetWords = normTarget.split(/\s+/).filter(w => w.length > 2);
+    if (!targetWords.length) return true;
+    const matchCount = targetWords.filter(w => normCand.includes(w)).length;
+    return (matchCount / targetWords.length) >= 0.4;
+  }
+
+  // Attempt 1: Title + Artist on SoundCloud
   if (queryFull) {
     const res = await player.search(queryFull, {
       ...options,
@@ -310,14 +321,16 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     }).catch(() => null);
 
     if (res?.hasTracks()) {
-      const st = res.tracks[0];
-      if (track.thumbnail) st.thumbnail = track.thumbnail;
-      logger.info('Bridge', `✓ Bridged "${track.title}" → "${st.title}" (${st.url})`);
-      return st;
+      const match = res.tracks.find(t => isRelevantMatch(t.title, cleanTitle)) || res.tracks[0];
+      if (track.thumbnail) match.thumbnail = track.thumbnail;
+      match.title = track.title; // Preserve original title for display
+      match.author = track.author; // Preserve original artist
+      logger.info('Bridge', `✓ Matched stream for "${track.title}" via SoundCloud: "${match.title}"`);
+      return match;
     }
   }
 
-  // Attempt 2: Title Only
+  // Attempt 2: Title Only on SoundCloud
   if (queryTitleOnly && queryTitleOnly !== queryFull) {
     const res = await player.search(queryTitleOnly, {
       ...options,
@@ -325,13 +338,14 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     }).catch(() => null);
 
     if (res?.hasTracks()) {
-      const st = res.tracks[0];
-      if (track.thumbnail) st.thumbnail = track.thumbnail;
-      logger.info('Bridge', `✓ Bridged "${track.title}" (title-only) → "${st.title}" (${st.url})`);
-      return st;
+      const match = res.tracks.find(t => isRelevantMatch(t.title, cleanTitle)) || res.tracks[0];
+      if (track.thumbnail) match.thumbnail = track.thumbnail;
+      match.title = track.title;
+      match.author = track.author;
+      logger.info('Bridge', `✓ Matched stream for "${track.title}" via SoundCloud (title-only)`);
+      return match;
     }
   }
 
-  // Fallback to track as-is
   return track;
 }
