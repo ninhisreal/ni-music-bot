@@ -95,7 +95,10 @@ export function setupPlayerEvents() {
   // ── Track starts playing ───────────────────────────────────────────
   player.events.on(GuildQueueEvent.playerStart, async (queue, track) => {
     const channel = queue.metadata?.channel;
-    if (!channel) return;
+    if (!channel) {
+      logger.warn('Events', 'playerStart: No channel in queue metadata!');
+      return;
+    }
 
     const guildId = queue.guild.id;
 
@@ -109,14 +112,15 @@ export function setupPlayerEvents() {
     await deleteOldNpMessage(guildId);
 
     // Build Now Playing embed + buttons
-    const embed = buildNowPlayingEmbed(track, queue);
-    const row1 = buildPlayerControlsRow(queue);
-    const row2 = buildPlayerControlsRow2();
-    const row3 = buildPlayerControlsRow3();
-
     try {
+      const embed = buildNowPlayingEmbed(track, queue);
+      const row1 = buildPlayerControlsRow(queue);
+      const row2 = buildPlayerControlsRow2();
+      const row3 = buildPlayerControlsRow3();
+
       const msg = await channel.send({ embeds: [embed], components: [row1, row2, row3] });
       nowPlayingMessages.set(guildId, msg);
+      logger.info('Events', `🎵 Now Playing: "${track.title}" in #${channel.name}`);
 
       // ── Live Progress Bar Update every 15s ───────────────────────
       const updateInterval = setInterval(async () => {
@@ -140,7 +144,12 @@ export function setupPlayerEvents() {
       if (updateInterval.unref) updateInterval.unref();
       npUpdateIntervals.set(guildId, updateInterval);
     } catch (err) {
-      logger.error('Events', `NowPlaying embed: ${err.message}`);
+      logger.error('Events', `NowPlaying embed FAILED: ${err.message}\n${err.stack}`);
+      // Fallback: send a simple text message if embed fails
+      try {
+        const fallback = await channel.send(`🎵 **Đang phát:** ${track.title} — ${track.author || 'Unknown'}`);
+        nowPlayingMessages.set(guildId, fallback);
+      } catch {}
     }
   });
 
