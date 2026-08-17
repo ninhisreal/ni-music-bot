@@ -1,6 +1,30 @@
 // ─── Balanced Threadpool for Audio Processing & Crypto ─────────────────
 process.env.UV_THREADPOOL_SIZE = '4';
 
+import fs from 'node:fs';
+import { execSync } from 'node:child_process';
+
+// ─── Auto-Detect FFmpeg for Termux / Linux / Windows ───────────────────
+if (!process.env.FFMPEG_PATH) {
+  const possiblePaths = [
+    '/data/data/com.termux/files/usr/bin/ffmpeg',
+    '/usr/bin/ffmpeg',
+    '/usr/local/bin/ffmpeg',
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      process.env.FFMPEG_PATH = p;
+      break;
+    }
+  }
+  if (!process.env.FFMPEG_PATH) {
+    try {
+      const p = execSync('which ffmpeg', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+      if (p && fs.existsSync(p)) process.env.FFMPEG_PATH = p;
+    } catch {}
+  }
+}
+
 import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
 import { config, validateProductionConfig } from './config.js';
 import { initDb, flushDb } from './database/db.js';
