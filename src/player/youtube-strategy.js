@@ -289,12 +289,50 @@ export async function searchByPlatform(player, query, platform = 'auto', options
  */
 function isAccurateMatch(candidateTitle, targetTitle) {
   if (!candidateTitle || !targetTitle) return false;
-  const c = candidateTitle.toLowerCase().replace(/[^a-z0-9\s]/gi, '');
-  const t = targetTitle.toLowerCase().replace(/[^a-z0-9\s]/gi, '');
-  const targetWords = t.split(/\s+/).filter(w => w.length > 2 && !['official', 'video', 'audio', 'music', 'ep', 'mv', 'fashion'].includes(w));
+  const normalize = (str) =>
+    str
+      .toLowerCase()
+      .replace(/[\(\)\[\]\{\}\-_|•–—~`'"!?,.:;/\\+]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const c = normalize(candidateTitle);
+  const t = normalize(targetTitle);
+
+  const stopWords = new Set([
+    'official', 'music', 'video', 'audio', 'lyric', 'lyrics', 'mv', 'hd', 'hq',
+    'ep', 'lp', 'album', 'single', 'visualizer', 'fashion', 'performance',
+    'the', 'and', 'a', 'an', 'in', 'on', 'of', 'for', 'to', 'with', 'by', 'ft', 'feat', 'prod'
+  ]);
+
+  const targetWords = t.split(' ').filter(w => w.length >= 2 && !stopWords.has(w));
+  const candidateWords = new Set(c.split(' ').filter(w => w.length >= 2 && !stopWords.has(w)));
+
   if (!targetWords.length) return true;
-  const matchCount = targetWords.filter(w => c.includes(w)).length;
-  return (matchCount / targetWords.length) >= 0.5;
+
+  // Key distinctive words that distinguish versions/EPs/sub-tracks:
+  const distinctKeywords = [
+    'lunar', 'after', 'cold', 'deep', 'messe', 'nights', 'beijing', 'tokyo',
+    'remix', 'slowed', 'reverb', 'acoustic', 'live', 'instrumental', 'club',
+    'extended', 'radio', 'edit', 'vip', 'cover', 'sped', 'speed', 'drill'
+  ];
+
+  for (const kw of distinctKeywords) {
+    const targetHas = targetWords.includes(kw);
+    const candidateHas = candidateWords.has(kw);
+    if (targetHas && !candidateHas) return false;
+    if (!targetHas && candidateHas) return false;
+  }
+
+  let matchCount = 0;
+  for (const w of targetWords) {
+    if (candidateWords.has(w) || c.includes(w)) {
+      matchCount++;
+    }
+  }
+
+  const score = matchCount / targetWords.length;
+  return score >= 0.7;
 }
 
 /**
@@ -324,7 +362,7 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  const cleanAuthor = (track.author || '')
+  let cleanAuthor = (track.author || '')
     .replace(/\s*-\s*Topic$/i, '')
     .replace(/Official\s*Channel/i, '')
     .replace(/VEVO$/i, '')
@@ -333,9 +371,15 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     .replace(/\s+/g, ' ')
     .trim();
 
+  // If author has spaced-out single letters like "s o u l w a r e", collapse to "soulware"
+  if (/^([a-z0-9]\s+)+[a-z0-9]$/i.test(cleanAuthor)) {
+    cleanAuthor = cleanAuthor.replace(/\s+/g, '');
+  }
+
+  // Clean title alone is the highest precision query because video titles already include the artist
   const queries = [
-    cleanAuthor ? `${cleanTitle} ${cleanAuthor}` : cleanTitle,
     cleanTitle,
+    cleanAuthor && !cleanTitle.toLowerCase().includes(cleanAuthor.toLowerCase()) ? `${cleanTitle} ${cleanAuthor}` : null,
   ].filter(Boolean);
 
   logger.info('Bridge', `Resolving unique audio stream for: "${track.title}"...`);
@@ -348,7 +392,7 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     }).catch(() => null);
 
     if (res?.hasTracks()) {
-      // Find candidate that matches the specific song title and is > 45s
+      // Find candidate that accurately matches the specific song title and is full length (>45s)
       const matchingTrack = res.tracks.find(t => isAccurateMatch(t.title, cleanTitle) && (t.durationMS || 0) > 45000)
         || res.tracks.find(t => isAccurateMatch(t.title, cleanTitle));
 
@@ -362,18 +406,23 @@ export async function resolvePlayableTrack(player, track, options = {}) {
     }
   }
 
-  // Fallback: Use top result if available
-  const fallbackRes = await player.search(queries[0], {
-    ...options,
-    searchEngine: QueryType.SOUNDCLOUD_SEARCH,
-  }).catch(() => null);
+  // If no strict match found on SoundCloud, check first candidate if it's high quality
+  for (const q of queries) {
+    const res = await player.search(q, {
+      ...options,
+      searchEngine: QueryType.SOUNDCLOUD_SEARCH,
+    }).catch(() => null);
 
-  if (fallbackRes?.hasTracks()) {
-    const chosen = fallbackRes.tracks[0];
-    if (track.thumbnail) chosen.thumbnail = track.thumbnail;
-    chosen.title = track.title;
-    chosen.author = track.author;
-    return chosen;
+    if (res?.hasTracks()) {
+      const candidate = res.tracks[0];
+      // Only accept if at least 50% words match and not conflicting keywords
+      if (isAccurateMatch(candidate.title, cleanTitle)) {
+        if (track.thumbnail) candidate.thumbnail = track.thumbnail;
+        candidate.title = track.title;
+        candidate.author = track.author;
+        return candidate;
+      }
+    }
   }
 
   return track;
