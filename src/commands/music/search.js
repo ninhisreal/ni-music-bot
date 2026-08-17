@@ -45,7 +45,7 @@ async function handleTrackSelection(i, tracks, voiceChannel, channel, volume, pl
 export default {
   data: new SlashCommandBuilder()
     .setName('search')
-    .setDescription('Tìm kiếm bài hát theo thứ tự ưu tiên: Deezer > Apple Music > Spotify > SoundCloud')
+    .setDescription('Tìm kiếm bài hát theo thứ tự ưu tiên: Deezer > Apple Music > Spotify > YouTube > SoundCloud')
     .addStringOption(opt =>
       opt.setName('query').setDescription('Tên bài hát cần tìm').setRequired(true)
     )
@@ -53,10 +53,11 @@ export default {
       opt.setName('platform')
         .setDescription('Chọn nền tảng')
         .addChoices(
-          { name: '🔀 Tự động (Deezer > Apple Music > Spotify > SoundCloud)', value: 'auto' },
+          { name: '🔀 Tự động (Deezer > Apple Music > Spotify > YouTube > SoundCloud)', value: 'auto' },
           { name: '💜 Deezer', value: 'deezer' },
           { name: '🎵 Apple Music', value: 'applemusic' },
           { name: '🟢 Spotify', value: 'spotify' },
+          { name: '▶️ YouTube', value: 'youtube' },
           { name: '🟠 SoundCloud', value: 'soundcloud' }
         )
     ),

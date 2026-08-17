@@ -28,24 +28,25 @@ function getNodeOptions(channel, volume = 80) {
 export default {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Tìm kiếm và phát nhạc theo thứ tự ưu tiên: Deezer > Apple Music > Spotify > SoundCloud')
+    .setDescription('Tìm kiếm và phát nhạc theo thứ tự ưu tiên: Deezer > Apple Music > Spotify > YouTube > SoundCloud')
     .addStringOption(opt =>
       opt.setName('query')
-        .setDescription('Tên bài hát, URL Deezer, Apple Music, Spotify, SoundCloud, YouTube...')
+        .setDescription('Tên bài hát, URL Deezer, Apple Music, Spotify, YouTube, SoundCloud...')
         .setRequired(true)
     )
     .addStringOption(opt =>
       opt.setName('platform')
         .setDescription('Chọn nền tảng tìm kiếm cụ thể')
         .addChoices(
-          { name: '🔀 Tự động (Deezer > Apple Music > Spotify > SoundCloud)', value: 'auto' },
+          { name: '🔀 Tự động (Deezer > Apple Music > Spotify > YouTube > SoundCloud)', value: 'auto' },
           { name: '💜 Deezer', value: 'deezer' },
           { name: '🎵 Apple Music', value: 'applemusic' },
           { name: '🟢 Spotify', value: 'spotify' },
+          { name: '▶️ YouTube', value: 'youtube' },
           { name: '🟠 SoundCloud', value: 'soundcloud' }
         )
     ),
-  aliases: ['p', 'dz', 'am', 'sp', 'sc', 'yt'],
+  aliases: ['p', 'dz', 'am', 'sp', 'yt', 'sc'],
 
   async execute(interaction) {
     const vCheck = checkVoice(interaction, true);
