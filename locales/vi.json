@@ -1,0 +1,115 @@
+{
+  "bot": {
+    "ready": "✅ Bot đã sẵn sàng! Đăng nhập với tên {{name}}",
+    "error": "❌ Đã xảy ra lỗi"
+  },
+  "music": {
+    "not_in_voice": "❌ Bạn cần ở trong một kênh thoại để dùng lệnh này!",
+    "not_same_channel": "❌ Bạn phải ở cùng kênh thoại với bot!",
+    "nothing_playing": "❌ Hiện tại không có bài nhạc nào đang phát!",
+    "queue_empty": "❌ Hàng đợi đang trống!",
+    "searching": "⏳ Đang tìm kiếm **{{query}}**...",
+    "play_added": "✅ Đã thêm **{{title}}** vào hàng đợi",
+    "play_added_playlist": "✅ Đã thêm **{{count}}** bài từ **{{name}}** vào hàng đợi",
+    "skipped": "⏭️ Đã bỏ qua bài **{{title}}**",
+    "stopped": "⏹️ Đã dừng phát nhạc và xóa hàng đợi",
+    "paused": "⏸️ Đã tạm dừng phát nhạc",
+    "resumed": "▶️ Đã tiếp tục phát nhạc",
+    "volume_set": "🔊 Đã đặt âm lượng thành **{{volume}}%**",
+    "volume_out_range": "❌ Âm lượng phải từ 0 đến 200!",
+    "loop_set": "🔁 Chế độ lặp: **{{mode}}**",
+    "shuffled": "🔀 Đã xáo trộn hàng đợi (**{{count}}** bài)",
+    "no_results": "❌ Không tìm thấy kết quả cho **{{query}}**",
+    "track_removed": "🗑️ Đã xóa **{{title}}** khỏi hàng đợi",
+    "now_playing": "🎵 Đang phát",
+    "queue_title": "📋 Hàng đợi",
+    "seek_success": "⏩ Đã tua đến **{{position}}**",
+    "seek_invalid": "❌ Vị trí không hợp lệ! Dùng định dạng: `1:30` hoặc `90` (giây)",
+    "filter_set": "🎛️ Đã áp dụng filter: **{{filter}}**",
+    "filter_cleared": "🎛️ Đã tắt tất cả filters",
+    "empty_queue_autodj": "🤖 Hết nhạc! Auto-DJ đang tìm bài tương tự...",
+    "autodj_added": "🤖 Auto-DJ đã thêm: **{{title}}**",
+    "left_channel": "👋 Đã rời kênh thoại do không có ai nghe nhạc",
+    "bot_no_permission": "❌ Bot không có quyền kết nối/phát âm thanh trong kênh này!",
+    "move_success": "✅ Đã di chuyển **{{title}}** từ vị trí {{from}} → {{to}}"
+  },
+  "lyrics": {
+    "searching": "⏳ Đang tìm lời bài **{{title}}**...",
+    "not_found": "❌ Không tìm thấy lời bài **{{title}}**",
+    "title": "🎵 Lời bài hát — {{title}}"
+  },
+  "playlist": {
+    "saved": "✅ Đã lưu playlist **{{name}}** với {{count}} bài",
+    "loaded": "✅ Đã tải playlist **{{name}}** ({{count}} bài) vào hàng đợi",
+    "deleted": "🗑️ Đã xóa playlist **{{name}}**",
+    "not_found": "❌ Không tìm thấy playlist **{{name}}**",
+    "empty": "❌ Playlist **{{name}}** không có bài nào",
+    "no_playlists": "❌ Bạn chưa có playlist nào. Dùng `/playlist save` để tạo!",
+    "code_generated": "📤 Mã code playlist: `{{code}}`\nDùng `/playlist import {{code}}` để tải lại!",
+    "code_not_found": "❌ Mã code `{{code}}` không tồn tại hoặc đã hết hạn!",
+    "imported": "📥 Đã nhập playlist từ mã `{{code}}` ({{count}} bài) vào hàng đợi",
+    "name_taken": "❌ Bạn đã có playlist tên **{{name}}** rồi. Chọn tên khác!",
+    "tag_added": "🏷️ Đã gắn tag **{{tag}}** cho **{{title}}**",
+    "tag_removed": "🏷️ Đã xóa tag **{{tag}}** khỏi **{{title}}**",
+    "no_tracks_tag": "❌ Không tìm thấy bài nào với tag **{{tag}}**"
+  },
+  "vote_skip": {
+    "started": "👥 Bỏ phiếu skip! Cần **{{needed}}/{{total}}** phiếu. Dùng `/voteskip` để bỏ phiếu!",
+    "voted": "👍 **{{user}}** đã bỏ phiếu skip (**{{votes}}/{{needed}}**)",
+    "already_voted": "❌ Bạn đã bỏ phiếu rồi!",
+    "passed": "✅ Đủ phiếu! Đã bỏ qua bài **{{title}}**",
+    "no_one_in_vc": "❌ Không có ai trong kênh thoại!"
+  },
+  "sleep_timer": {
+    "set": "💤 Hẹn giờ tắt nhạc sau **{{minutes}}** phút",
+    "cancelled": "✅ Đã hủy hẹn giờ tắt nhạc",
+    "fired": "💤 Hẹn giờ đã kích hoạt! Bot sẽ rời kênh thoại...",
+    "not_set": "❌ Chưa đặt hẹn giờ nào!"
+  },
+  "artist": {
+    "searching": "⏳ Đang tìm thông tin nghệ sĩ **{{name}}**...",
+    "not_found": "❌ Không tìm thấy thông tin nghệ sĩ **{{name}}**",
+    "title": "🎙️ Thông tin nghệ sĩ"
+  },
+  "stats": {
+    "title": "📊 Thống kê nghe nhạc",
+    "no_data": "❌ Bạn chưa nghe bài nào! Hãy phát nhạc để bắt đầu thu thập thống kê.",
+    "top_tracks": "🏆 Top bài hát",
+    "top_artists": "🎤 Top nghệ sĩ",
+    "total_time": "⏱️ Tổng thời gian nghe",
+    "total_songs": "🎵 Tổng bài đã nghe"
+  },
+  "history": {
+    "title": "📜 Lịch sử phát nhạc",
+    "empty": "❌ Chưa có bài nào được phát trên server này!"
+  },
+  "admin": {
+    "dj_role_set": "✅ Đã đặt DJ Role thành {{role}}",
+    "dj_role_cleared": "✅ Đã xóa DJ Role. Bây giờ mọi người đều có thể dùng bot.",
+    "no_dj_role": "❌ Bạn không có quyền DJ để dùng lệnh này! Cần role: {{role}}",
+    "channel_locked": "🔒 Bot chỉ join kênh thoại **{{channel}}** từ bây giờ",
+    "channel_unlocked": "🔓 Bot có thể join bất kỳ kênh thoại nào",
+    "schedule_set": "⏰ Đã lên lịch phát **{{playlist}}** lúc **{{time}}** mỗi ngày",
+    "schedule_cleared": "✅ Đã xóa lịch phát nhạc tự động",
+    "premium_granted": "✅ Đã cấp premium cho {{target}} đến {{expires}}",
+    "premium_revoked": "✅ Đã thu hồi premium của {{target}}"
+  },
+  "premium": {
+    "required": "⭐ Tính năng này yêu cầu **Premium**! Liên hệ admin server để được cấp.",
+    "info_title": "⭐ Premium Bot",
+    "features": "Auto-DJ, Lên lịch phát nhạc, Per-User Volume, Song Tags, Multi-Language, Playlist không giới hạn"
+  },
+  "language": {
+    "changed": "🌐 Đã đổi ngôn ngữ bot thành **Tiếng Việt**",
+    "invalid": "❌ Ngôn ngữ không hỗ trợ! Dùng: `vi` hoặc `en`"
+  },
+  "misc": {
+    "ping": "🏓 Pong! Độ trễ: **{{ms}}ms** | API: **{{api}}ms**",
+    "invite": "🔗 Mời bot vào server của bạn!",
+    "help_title": "❓ Danh sách lệnh",
+    "error_generic": "❌ Đã xảy ra lỗi! Thử lại sau.",
+    "cooldown": "⏳ Bạn đang dùng lệnh quá nhanh! Thử lại sau **{{seconds}}** giây.",
+    "confirm_yes": "✅ Xác nhận",
+    "confirm_no": "❌ Hủy"
+  }
+}

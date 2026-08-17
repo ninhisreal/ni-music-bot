@@ -1,0 +1,37 @@
+{
+  "guild_settings": [
+    {
+      "id": 1,
+      "guild_id": "1250455464336949278",
+      "prefix": "ni!",
+      "dj_role_id": null,
+      "text_channel_id": null,
+      "voice_channel_id": null,
+      "language": "vi",
+      "volume": 80,
+      "auto_dj_enabled": 0,
+      "locked_channel_id": null,
+      "created_at": 1723824000,
+      "updated_at": 1723824000
+    }
+  ],
+  "playlists": [],
+  "playlist_tracks": [],
+  "playlist_codes": [],
+  "premium_users": [],
+  "premium_guilds": [],
+  "listening_stats": [],
+  "play_history": [],
+  "song_tags": [],
+  "scheduled_playback": [],
+  "allowed_guilds": [
+    {
+      "id": 1,
+      "guild_id": "1250455464336949278",
+      "guild_name": "Demon Aot 🇻🇳",
+      "added_by": "1059774801968902184",
+      "created_at": 1723824000,
+      "updated_at": 1723824000
+    }
+  ]
+}

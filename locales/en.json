@@ -1,0 +1,115 @@
+{
+  "bot": {
+    "ready": "✅ Bot is ready! Logged in as {{name}}",
+    "error": "❌ An error occurred"
+  },
+  "music": {
+    "not_in_voice": "❌ You need to be in a voice channel to use this command!",
+    "not_same_channel": "❌ You must be in the same voice channel as the bot!",
+    "nothing_playing": "❌ Nothing is currently playing!",
+    "queue_empty": "❌ The queue is empty!",
+    "searching": "⏳ Searching for **{{query}}**...",
+    "play_added": "✅ Added **{{title}}** to the queue",
+    "play_added_playlist": "✅ Added **{{count}}** tracks from **{{name}}** to the queue",
+    "skipped": "⏭️ Skipped **{{title}}**",
+    "stopped": "⏹️ Stopped playback and cleared the queue",
+    "paused": "⏸️ Paused playback",
+    "resumed": "▶️ Resumed playback",
+    "volume_set": "🔊 Volume set to **{{volume}}%**",
+    "volume_out_range": "❌ Volume must be between 0 and 200!",
+    "loop_set": "🔁 Loop mode: **{{mode}}**",
+    "shuffled": "🔀 Shuffled the queue (**{{count}}** tracks)",
+    "no_results": "❌ No results found for **{{query}}**",
+    "track_removed": "🗑️ Removed **{{title}}** from the queue",
+    "now_playing": "🎵 Now Playing",
+    "queue_title": "📋 Queue",
+    "seek_success": "⏩ Seeked to **{{position}}**",
+    "seek_invalid": "❌ Invalid position! Use format: `1:30` or `90` (seconds)",
+    "filter_set": "🎛️ Applied filter: **{{filter}}**",
+    "filter_cleared": "🎛️ Cleared all filters",
+    "empty_queue_autodj": "🤖 Queue empty! Auto-DJ is looking for similar tracks...",
+    "autodj_added": "🤖 Auto-DJ added: **{{title}}**",
+    "left_channel": "👋 Left voice channel due to inactivity",
+    "bot_no_permission": "❌ Bot doesn't have permission to connect/speak in this channel!",
+    "move_success": "✅ Moved **{{title}}** from position {{from}} → {{to}}"
+  },
+  "lyrics": {
+    "searching": "⏳ Searching lyrics for **{{title}}**...",
+    "not_found": "❌ Lyrics not found for **{{title}}**",
+    "title": "🎵 Lyrics — {{title}}"
+  },
+  "playlist": {
+    "saved": "✅ Saved playlist **{{name}}** with {{count}} tracks",
+    "loaded": "✅ Loaded playlist **{{name}}** ({{count}} tracks) into queue",
+    "deleted": "🗑️ Deleted playlist **{{name}}**",
+    "not_found": "❌ Playlist **{{name}}** not found",
+    "empty": "❌ Playlist **{{name}}** has no tracks",
+    "no_playlists": "❌ You have no playlists. Use `/playlist save` to create one!",
+    "code_generated": "📤 Playlist code: `{{code}}`\nUse `/playlist import {{code}}` to restore it!",
+    "code_not_found": "❌ Code `{{code}}` doesn't exist or has expired!",
+    "imported": "📥 Imported playlist from code `{{code}}` ({{count}} tracks) into queue",
+    "name_taken": "❌ You already have a playlist named **{{name}}**. Choose another name!",
+    "tag_added": "🏷️ Tagged **{{title}}** with **{{tag}}**",
+    "tag_removed": "🏷️ Removed tag **{{tag}}** from **{{title}}**",
+    "no_tracks_tag": "❌ No tracks found with tag **{{tag}}**"
+  },
+  "vote_skip": {
+    "started": "👥 Vote to skip! Need **{{needed}}/{{total}}** votes. Use `/voteskip` to vote!",
+    "voted": "👍 **{{user}}** voted to skip (**{{votes}}/{{needed}}**)",
+    "already_voted": "❌ You already voted!",
+    "passed": "✅ Vote passed! Skipped **{{title}}**",
+    "no_one_in_vc": "❌ No one is in the voice channel!"
+  },
+  "sleep_timer": {
+    "set": "💤 Sleep timer set for **{{minutes}}** minutes",
+    "cancelled": "✅ Sleep timer cancelled",
+    "fired": "💤 Sleep timer fired! Bot is leaving the voice channel...",
+    "not_set": "❌ No sleep timer is set!"
+  },
+  "artist": {
+    "searching": "⏳ Looking up artist info for **{{name}}**...",
+    "not_found": "❌ Artist info not found for **{{name}}**",
+    "title": "🎙️ Artist Info"
+  },
+  "stats": {
+    "title": "📊 Listening Statistics",
+    "no_data": "❌ No listening history yet! Play some music to start tracking.",
+    "top_tracks": "🏆 Top Tracks",
+    "top_artists": "🎤 Top Artists",
+    "total_time": "⏱️ Total listening time",
+    "total_songs": "🎵 Total tracks played"
+  },
+  "history": {
+    "title": "📜 Play History",
+    "empty": "❌ No tracks have been played on this server yet!"
+  },
+  "admin": {
+    "dj_role_set": "✅ DJ Role set to {{role}}",
+    "dj_role_cleared": "✅ DJ Role cleared. Everyone can now use the bot.",
+    "no_dj_role": "❌ You need the DJ role to use this command! Required: {{role}}",
+    "channel_locked": "🔒 Bot will only join **{{channel}}** from now on",
+    "channel_unlocked": "🔓 Bot can join any voice channel",
+    "schedule_set": "⏰ Scheduled **{{playlist}}** to play at **{{time}}** every day",
+    "schedule_cleared": "✅ Cleared scheduled playback",
+    "premium_granted": "✅ Granted premium to {{target}} until {{expires}}",
+    "premium_revoked": "✅ Revoked premium from {{target}}"
+  },
+  "premium": {
+    "required": "⭐ This feature requires **Premium**! Contact the server admin.",
+    "info_title": "⭐ Premium Bot",
+    "features": "Auto-DJ, Scheduled Playback, Per-User Volume, Song Tags, Multi-Language, Unlimited Playlists"
+  },
+  "language": {
+    "changed": "🌐 Language changed to **English**",
+    "invalid": "❌ Language not supported! Use: `vi` or `en`"
+  },
+  "misc": {
+    "ping": "🏓 Pong! Latency: **{{ms}}ms** | API: **{{api}}ms**",
+    "invite": "🔗 Invite the bot to your server!",
+    "help_title": "❓ Command List",
+    "error_generic": "❌ An error occurred! Please try again.",
+    "cooldown": "⏳ You're using commands too fast! Try again in **{{seconds}}** seconds.",
+    "confirm_yes": "✅ Confirm",
+    "confirm_no": "❌ Cancel"
+  }
+}
