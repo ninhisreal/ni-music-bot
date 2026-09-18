@@ -1,6 +1,6 @@
 # 📖 Hướng Dẫn Cài Đặt & Triển Khai (Setup & Deployment)
 
-Tài liệu này hướng dẫn chi tiết cách chạy **Ni Music Bot** trên máy tính cá nhân (Local) và cách Deploy lên hosting miễn phí **WispByte**.
+Tài liệu này hướng dẫn chi tiết cách chạy **Ni Music Bot** trên máy tính cá nhân (Local), hosting đám mây và điện thoại di động Android qua **Termux**.
 
 ---
 
@@ -9,7 +9,7 @@ Tài liệu này hướng dẫn chi tiết cách chạy **Ni Music Bot** trên m
 1. Truy cập [Discord Developer Portal](https://discord.com/developers/applications).
 2. Bấm **New Application** → Đặt tên bot (ví dụ: `Ni Music`).
 3. Vào mục **Bot**:
-   - Bấm **Reset Token** để lấy `DISCORD_TOKEN`.
+   - Bấm **Reset Token** để lấy `DISCORD_TOKEN`. *(Nếu token từng bị lộ, bạn bắt buộc phải reset ngay).*
    - Bật đầy đủ 3 mục **Privileged Gateway Intents**:
      - ✅ **Presence Intent**
      - ✅ **Server Members Intent**
@@ -19,68 +19,88 @@ Tài liệu này hướng dẫn chi tiết cách chạy **Ni Music Bot** trên m
    - Chọn Bot Permissions:
      - `Send Messages`, `Embed Links`, `Attach Files`
      - `Connect`, `Speak`, `Use Voice Activity`
-     - `Manage Roles` (nếu cần DJ role)
+     - `Manage Roles` (nếu dùng DJ role)
    - Copy đường link tạo ra và dán vào trình duyệt để mời Bot vào server của bạn.
 
 ---
 
-## 2. Cài Đặt Môi Trường & Chạy Local
+## 2. Cài Đặt Môi Trường & Chạy Local / PC
+
+### Yêu Cầu Hệ Thống:
+- **Node.js >= 22.12.0** hoặc **Node.js 24.x** (Bắt buộc để tương thích với `@discordjs/voice` và sử dụng `node:sqlite` bản địa hiệu năng cao).
+- **FFmpeg** đã được cài đặt trong PATH hệ thống.
 
 ### Bước 1: Chuẩn bị file `.env`
-Tạo file `.env` tại thư mục gốc của bot và điền các thông tin:
+Tạo file `.env` tại thư mục gốc của bot:
 
 ```env
-DISCORD_TOKEN=bot_token_cua_ban
+# Bắt buộc (Fail-closed)
+DISCORD_TOKEN=bot_token_moi_cua_ban
 CLIENT_ID=client_id_cua_ban
-OWNER_ID=id_discord_cua_ban
+OWNER_ID=discord_user_id_cua_ban
+ALLOWED_GUILD_ID=discord_server_id_cua_ban
+
+# Tùy chọn
 PREFIX=ni!
 DEFAULT_LANGUAGE=vi
+TEST_GUILD_ID=id_server_de_test_slash_command_tuc_thi
 ```
 
-*(Tùy chọn: Thêm `GENIUS_ACCESS_TOKEN` từ [Genius API](https://genius.com/api-clients) để tìm lời bài hát tốt hơn).*
-
 ### Bước 2: Đăng ký Slash Commands
-Chạy lệnh sau một lần để đăng ký các lệnh Slash (`/`) với Discord:
+Chạy lệnh sau để đồng bộ toàn bộ Slash Commands lên Discord:
 ```bash
 npm run deploy
 ```
 
-### Bước 3: Khởi động Bot
+### Bước 3: Chạy Kiểm Thử Tự Động (Unit Tests)
+```bash
+npm test
+```
+
+### Bước 4: Khởi động Bot
 ```bash
 npm start
 ```
-Bot sẽ hiển thị thông báo: `[INFO] [Bot] ✅ Logged in as Ni Music#1234!`
 
 ---
 
-## 3. Hướng Dẫn Deploy Lên Hosting Miễn Phí WispByte
+## 3. Hướng Dẫn Chạy Bền Bỉ Trên Điện Thoại Android (Termux 12GB RAM)
 
-WispByte cung cấp hosting miễn phí 24/7 cho Discord Bot chạy Node.js.
+Thiết bị Android 12GB RAM hoàn toàn đủ sức chạy bot 24/7 mượt mà. Tuy nhiên, bạn cần ngăn chặn hệ điều hành Android ngắt kết nối mạng hoặc đưa ứng dụng vào chế độ ngủ (Doze Mode).
 
-### Bước 1: Tạo Server trên WispByte
-1. Đăng ký tài khoản tại [WispByte](https://wispbyte.com).
-2. Tạo một Server miễn phí mới và chọn **Node.js** (chọn Node.js 20 hoặc 22/24).
+### Bước 1: Cài đặt Termux và công cụ
+Mở Termux và chạy các lệnh:
+```bash
+pkg update -y
+pkg install -y nodejs-lts git ffmpeg
+```
+Kiểm tra phiên bản Node: `node -v` (yêu cầu >= 22.12).
 
-### Bước 2: Tải Source Code lên WispByte
-1. Vào **File Manager** trên bảng điều khiển WispByte.
-2. Upload toàn bộ source code của bot (trừ thư mục `node_modules` và file `data/bot.db` nếu có).
-3. Tạo file `.env` trên File Manager của WispByte với `DISCORD_TOKEN` và `CLIENT_ID`.
+### Bước 2: Khóa Wake Lock (Chống tắt CPU khi tắt màn hình)
+```bash
+termux-wake-lock
+```
+*Lưu ý:* Vào **Cài đặt Android** → **Ứng dụng** → **Termux** → **Pin (Battery)** → Chọn **Không giới hạn (Unrestricted / Tắt tối ưu hóa pin)**.
 
-### Bước 3: Cài đặt Dependencies & Khởi chạy
-1. Mở tab **Console** trên WispByte.
-2. Gõ lệnh cài đặt:
-   ```bash
-   npm install
-   ```
-3. Đăng ký Slash Commands:
-   ```bash
-   npm run deploy
-   ```
-4. Đặt **Startup Command** là:
-   ```bash
-   npm start
-   ```
-5. Bấm **Start** server. Bot sẽ hoạt động 24/7!
+### Bước 3: Cài đặt mã nguồn & Dependencies
+```bash
+git clone <url_repo>
+cd "Discord Bot"
+npm install
+npm run deploy
+```
+
+### Bước 4: Chạy nền với PM2
+Cài đặt PM2 để tự động khởi động lại bot nếu gặp sự cố hoặc tràn RAM:
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.cjs
+pm2 save
+```
+Các lệnh quản lý PM2 tiện lợi:
+- Xem log hoạt động: `pm2 logs discord-music-bot`
+- Kiểm tra trạng thái: `pm2 status`
+- Khởi động lại bot: `pm2 restart discord-music-bot`
 
 ---
 
@@ -88,29 +108,12 @@ WispByte cung cấp hosting miễn phí 24/7 cho Discord Bot chạy Node.js.
 
 | Lệnh Slash | Lệnh Prefix | Mô tả |
 |---|---|---|
-| `/play <query>` | `ni!p <tên/link>` | Phát nhạc đa nền tảng (YouTube Music, Spotify, Apple Music, Deezer...) |
-| `/nowplaying` | `ni!np` | Xem bài đang phát + **Bảng 14+ nút bấm tương tác trực tiếp** |
-| `/queue` | `ni!q` | Xem hàng đợi với nút chuyển trang phân trang |
+| `/play <query> [platform]` | `ni!p <tên/link>` | Phát nhạc trực tiếp từ YouTube, Spotify, Apple Music, Deezer, SoundCloud |
+| `/nowplaying` | `ni!np` | Xem bảng điều khiển bài đang phát với **14+ nút bấm tương tác trực tiếp** |
+| `/queue [page]` | `ni!q` | Xem hàng đợi phát nhạc kèm nút phân trang |
+| `/playlist <list/create/play/view/delete/share/import>` | `ni!pl <subcommand>` | Hệ thống quản lý playlist và chia sẻ mã code hợp nhất |
+| `/filter [name]` | `ni!fx <tên>` | 10+ bộ lọc DSP thời gian thực mượt mà (Bassboost, Nightcore, 8D, Treble...) |
 | `/skip` | `ni!s` | Bỏ qua bài hát hiện tại |
-| `/stop` | `ni!stop` | Dừng phát nhạc và xóa hàng đợi |
-| `/pause` / `/resume` | `ni!pause` / `ni!resume` | Tạm dừng / Tiếp tục phát |
-| `/volume <0-200>` | `ni!vol <0-200>` | Điều chỉnh âm lượng |
-| `/seek <thời gian>` | `ni!seek <1:30>` | Tua đến vị trí cụ thể |
-| `/filter <tên>` | `ni!filter <bassboost>` | Áp dụng 12+ hiệu ứng âm thanh (Nightcore, 8D, Bassboost...) |
+| `/stop` | `ni!stop` | Dừng phát nhạc và dọn dẹp hàng đợi |
+| `/volume <0-200>` | `ni!vol <0-200>` | Điều chỉnh âm lượng phát |
 | `/lyrics` | `ni!ly` | Hiển thị lời bài hát |
-| `/artistinfo` | `ni!artist` | Xem thông tin chi tiết nghệ sĩ/ca sĩ |
-| `/voteskip` | `ni!vs` | Bỏ phiếu skip theo tỷ lệ >50% |
-| `/sleeptimer <phút>` | `ni!sleep <30>` | Hẹn giờ tự động tắt nhạc |
-| `/playlist-save <tên>` | `ni!plsave <tên>` | Lưu hàng đợi hiện tại thành playlist cá nhân |
-| `/playlist-load <tên>` | `ni!plload <tên>` | Tải và phát playlist cá nhân |
-| `/playlist-export <tên>`| `ni!plexport <tên>`| **Xuất playlist thành mã code 8 ký tự** |
-| `/playlist-import <mã>` | `ni!plimport <mã>` | **Nhập và phát playlist từ mã code 8 ký tự** |
-| `/playlist-share <tên>` | `ni!plshare <tên>` | Chia sẻ playlist dạng Embed ra kênh chat |
-| `/tag add/play/list` | `ni!tag ...` | Gắn tag tâm trạng/thể loại và tìm kiếm bài theo tag |
-| `/djrole @role` | `ni!djrole @role` | Cài đặt quyền DJ |
-| `/channellock #kênh` | `ni!lockvc #kênh` | Khóa bot vào một kênh thoại duy nhất |
-| `/schedule set` | `ni!schedule ...` | Lên lịch phát nhạc tự động hàng ngày (Premium) |
-| `/settings` | `ni!config` | Bật/tắt Auto-DJ, chỉnh âm lượng mặc định |
-| `/stats` | `ni!stats` | Xem thống kê nghe nhạc chi tiết |
-| `/history` | `ni!recent` | Xem lịch sử 20 bài gần nhất |
-| `/language <vi/en>` | `ni!lang <vi/en>` | Chuyển đổi ngôn ngữ bot |
