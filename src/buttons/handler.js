@@ -249,13 +249,12 @@ export async function handleButtonInteraction(interaction) {
         const { getDb } = await import('../database/db.js');
         const db = getDb();
         const liveCode = generateCode();
-        const data = encodePlaylist(tracks);
-
+        const expiresAt = isPrem ? null : Math.floor(Date.now() / 1000) + 30 * 86400;
         const stmt = db.prepare(`
           INSERT INTO playlist_codes (code, playlist_id, creator_id, is_premium, data, created_at, expires_at)
-          VALUES (?, NULL, ?, ?, ?, datetime('now'), ${isPrem ? 'NULL' : "datetime('now', '+30 days')"})
+          VALUES (?, NULL, ?, ?, ?, unixepoch(), ?)
         `);
-        stmt.run(liveCode, interaction.user.id, isPrem ? 1 : 0, data);
+        stmt.run(liveCode, interaction.user.id, isPrem ? 1 : 0, data, expiresAt);
 
         const exp = isPrem ? 'Vĩnh viễn' : '30 ngày';
         return interaction.reply({
