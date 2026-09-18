@@ -71,8 +71,8 @@ export function startMemoryWatchdog() {
     const heapMB = Math.round(mem.heapUsed / 1048576);
     const rssMB = Math.round(mem.rss / 1048576);
 
-    if (heapMB > 180) {
-      logger.warn('Memory', `⚠️ Heap ${heapMB}MB > 180MB threshold — forcing GC`);
+    if (heapMB > 400) {
+      logger.warn('Memory', `⚠️ Heap ${heapMB}MB > 400MB threshold — forcing GC`);
       forceGC();
       const after = Math.round(process.memoryUsage().heapUsed / 1048576);
       logger.info('Memory', `GC complete: ${heapMB}MB → ${after}MB`);
@@ -126,7 +126,7 @@ export function setupPlayerEvents() {
       const updateInterval = setInterval(async () => {
         try {
           const currentMsg = nowPlayingMessages.get(guildId);
-          if (!currentMsg || !queue.isPlaying() || queue.currentTrack !== track) {
+          if (!currentMsg || !queue.currentTrack || queue.currentTrack !== track) {
             clearNpInterval(guildId);
             return;
           }
@@ -153,14 +153,9 @@ export function setupPlayerEvents() {
     }
   });
 
-  // ── Track finishes → Release stream references & GC ────────────────
+  // ── Track finishes ─────────────────────────────────────────────────
   player.events.on(GuildQueueEvent.playerFinish, (queue, track) => {
-    // Null out heavy references to help GC
-    if (track) {
-      track.raw = null;
-      track.thumbnail = null;
-    }
-    forceGC();
+    // Preserve track metadata for repeat mode / history navigation
   });
 
   // ── Track added to queue ───────────────────────────────────────────

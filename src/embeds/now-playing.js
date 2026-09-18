@@ -41,9 +41,12 @@ export function buildNowPlayingEmbed(track, queue) {
   const safeTitle = (track.title || 'Unknown Track').slice(0, 256);
   const safeAuthor = track.author || 'Unknown';
 
+  const isPaused   = typeof queue?.node?.isPaused === 'function' ? queue.node.isPaused() : false;
+  const statusName = isPaused ? '⏸️ Đang tạm dừng' : '▶️ Đang phát';
+
   const embed = new EmbedBuilder()
     .setColor(color)
-    .setAuthor({ name: '🎵 Đang phát' })
+    .setAuthor({ name: statusName })
     .setTitle(safeTitle)
     .setDescription(
       `**${src.emoji} ${src.name}** | 👤 **${safeAuthor}**\n\n` +
