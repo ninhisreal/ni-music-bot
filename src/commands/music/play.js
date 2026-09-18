@@ -1,7 +1,8 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { useMainPlayer } from 'discord-player';
 import { checkVoice, checkBotPerms } from '../../guards/role-check.js';
 import { searchByPlatform, resolvePlayableTrack } from '../../player/youtube-strategy.js';
+import { buildMiniControlsRow } from '../../buttons/player-controls.js';
 import { getSettings } from '../../database/models/settings.js';
 import { logger } from '../../utils/logger.js';
 
@@ -28,7 +29,7 @@ function getNodeOptions(channel, volume = 80) {
 export default {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Tìm kiếm và phát nhạc theo thứ tự ưu tiên: Deezer > Apple Music > Spotify > YouTube > SoundCloud')
+    .setDescription('Tìm kiếm và phát nhạc theo thứ tự ưu tiên: YouTube > Spotify > Deezer > Apple Music > SoundCloud')
     .addStringOption(opt =>
       opt.setName('query')
         .setDescription('Tên bài hát, URL Deezer, Apple Music, Spotify, YouTube, SoundCloud...')
@@ -38,11 +39,11 @@ export default {
       opt.setName('platform')
         .setDescription('Chọn nền tảng tìm kiếm cụ thể')
         .addChoices(
-          { name: '🔀 Tự động (Deezer > Apple Music > Spotify > YouTube > SoundCloud)', value: 'auto' },
+          { name: '🔀 Tự động (YouTube > Spotify > Deezer > Apple Music > SoundCloud)', value: 'auto' },
+          { name: '▶️ YouTube', value: 'youtube' },
+          { name: '🟢 Spotify', value: 'spotify' },
           { name: '💜 Deezer', value: 'deezer' },
           { name: '🎵 Apple Music', value: 'applemusic' },
-          { name: '🟢 Spotify', value: 'spotify' },
-          { name: '▶️ YouTube', value: 'youtube' },
           { name: '🟠 SoundCloud', value: 'soundcloud' }
         )
     ),
@@ -76,7 +77,14 @@ export default {
         nodeOptions: getNodeOptions(interaction.channel, settings.volume || 80),
       });
 
-      return interaction.editReply(`✅ Đã thêm **${track.title}** vào hàng đợi!`);
+      const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('✅ Đã thêm vào hàng đợi')
+        .setDescription(`[**${track.title}**](${track.url})\n👤 **${track.author || 'Unknown'}** • ⏱️ \`${track.duration}\``)
+        .setFooter({ text: `Yêu cầu bởi ${interaction.user.tag || interaction.user.username}` });
+      if (track.thumbnail) embed.setThumbnail(track.thumbnail);
+
+      return interaction.editReply({ embeds: [embed], components: [buildMiniControlsRow()] });
     } catch (err) {
       logger.error('Play', err.message);
       return interaction.editReply(`❌ Lỗi: ${err.message}`);
@@ -137,7 +145,14 @@ export default {
         nodeOptions: getNodeOptions(message.channel, settings.volume || 80),
       });
 
-      return msg.edit(`✅ Đã thêm **${track.title}** vào hàng đợi!`);
+      const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('✅ Đã thêm vào hàng đợi')
+        .setDescription(`[**${track.title}**](${track.url})\n👤 **${track.author || 'Unknown'}** • ⏱️ \`${track.duration}\``)
+        .setFooter({ text: `Yêu cầu bởi ${message.author.tag || message.author.username}` });
+      if (track.thumbnail) embed.setThumbnail(track.thumbnail);
+
+      return msg.edit({ content: '', embeds: [embed], components: [buildMiniControlsRow()] });
     } catch (err) {
       logger.error('Play', err.message);
       return msg.edit(`❌ Lỗi: ${err.message}`);

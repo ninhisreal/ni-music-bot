@@ -4,14 +4,15 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import { EMOJI, LOOP_MODE } from '../utils/constants.js';
+import { getSettings } from '../database/models/settings.js';
 
 /**
  * Build Row 1 of player controls:
  * [⏮️ Prev] [⏯️ Pause/Resume] [⏭️ Skip] [⏹️ Stop] [🔁 Loop]
  */
 export function buildPlayerControlsRow(queue) {
-  const isPaused = queue.node.isPaused();
-  const loopMode = queue.repeatMode;
+  const isPaused = typeof queue?.node?.isPaused === 'function' ? queue.node.isPaused() : false;
+  const loopMode = queue?.repeatMode ?? LOOP_MODE.NONE;
 
   const prevBtn = new ButtonBuilder()
     .setCustomId('player_prev')
@@ -77,9 +78,17 @@ export function buildPlayerControlsRow2() {
 
 /**
  * Build Row 3 of player controls:
- * [🎵 Lời bài hát] [🎛️ Filters] [📤 Lấy mã code]
+ * [📜 Lời bài hát] [🎛️ Audio FX] [🤖 Auto-DJ] [📤 Lấy mã code]
  */
-export function buildPlayerControlsRow3() {
+export function buildPlayerControlsRow3(queue = null) {
+  let isAutoDj = false;
+  if (queue?.guild?.id) {
+    try {
+      const settings = getSettings(queue.guild.id);
+      isAutoDj = Boolean(settings.auto_dj_enabled);
+    } catch {}
+  }
+
   const lyricsBtn = new ButtonBuilder()
     .setCustomId('player_lyrics')
     .setEmoji(EMOJI.LYRICS)
@@ -89,8 +98,14 @@ export function buildPlayerControlsRow3() {
   const filterBtn = new ButtonBuilder()
     .setCustomId('player_filters_menu')
     .setEmoji(EMOJI.FILTERS)
-    .setLabel('Filters')
+    .setLabel('Audio FX')
     .setStyle(ButtonStyle.Secondary);
+
+  const autoDjBtn = new ButtonBuilder()
+    .setCustomId('player_autodj')
+    .setEmoji('🤖')
+    .setLabel(isAutoDj ? 'Auto-DJ: Bật' : 'Auto-DJ: Tắt')
+    .setStyle(isAutoDj ? ButtonStyle.Success : ButtonStyle.Secondary);
 
   const exportBtn = new ButtonBuilder()
     .setCustomId('player_export_code')
@@ -98,5 +113,31 @@ export function buildPlayerControlsRow3() {
     .setLabel('Lấy mã code')
     .setStyle(ButtonStyle.Secondary);
 
-  return new ActionRowBuilder().addComponents(lyricsBtn, filterBtn, exportBtn);
+  return new ActionRowBuilder().addComponents(lyricsBtn, filterBtn, autoDjBtn, exportBtn);
+}
+
+/**
+ * Build Mini ActionRow for instant playback controls on track add.
+ * [⏯️ Phát/Dừng] [⏭️ Bỏ qua] [📋 Hàng đợi]
+ */
+export function buildMiniControlsRow() {
+  const pauseBtn = new ButtonBuilder()
+    .setCustomId('player_pause_resume')
+    .setEmoji('⏯️')
+    .setLabel('Phát/Dừng')
+    .setStyle(ButtonStyle.Primary);
+
+  const skipBtn = new ButtonBuilder()
+    .setCustomId('player_skip')
+    .setEmoji(EMOJI.SKIP)
+    .setLabel('Bỏ qua')
+    .setStyle(ButtonStyle.Secondary);
+
+  const queueBtn = new ButtonBuilder()
+    .setCustomId('player_queue')
+    .setEmoji(EMOJI.QUEUE)
+    .setLabel('Hàng đợi')
+    .setStyle(ButtonStyle.Secondary);
+
+  return new ActionRowBuilder().addComponents(pauseBtn, skipBtn, queueBtn);
 }

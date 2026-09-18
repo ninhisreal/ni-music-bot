@@ -237,6 +237,31 @@ export async function handleButtonInteraction(interaction) {
         });
       }
 
+      case 'player_autodj': {
+        const dj = checkDjRole(interaction);
+        if (!dj.ok) return interaction.reply({ content: dj.reason, ephemeral: true });
+
+        const { getSettings, setAutoDJ } = await import('../database/models/settings.js');
+        const currentSettings = getSettings(guild.id);
+        const newState = !currentSettings.auto_dj_enabled;
+        setAutoDJ(guild.id, newState);
+
+        if (queue?.currentTrack) {
+          const embed = buildNowPlayingEmbed(queue.currentTrack, queue);
+          const row1 = buildPlayerControlsRow(queue);
+          const row2 = buildPlayerControlsRow2();
+          const row3 = buildPlayerControlsRow3(queue);
+          await interaction.update({ embeds: [embed], components: [row1, row2, row3] }).catch(() => {});
+        }
+
+        return interaction.followUp({
+          content: newState
+            ? '🤖 **Auto-DJ đã BẬT!** Bot sẽ tự động tìm và phát nhạc tương tự khi hết hàng đợi.'
+            : '🤖 **Auto-DJ đã TẮT!**',
+          ephemeral: true,
+        }).catch(() => {});
+      }
+
       case 'player_export_code': {
         const tracks = queue.tracks.toArray();
         if (queue.currentTrack) tracks.unshift(queue.currentTrack);
