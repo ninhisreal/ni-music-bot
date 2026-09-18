@@ -25,8 +25,8 @@ export const config = {
   // Discord
   token: required('DISCORD_TOKEN', 'YOUR_DISCORD_BOT_TOKEN'),
   clientId: required('CLIENT_ID', 'YOUR_CLIENT_ID'),
-  ownerId: optional('OWNER_ID', '1059774801968902184'),
-  allowedGuildId: optional('ALLOWED_GUILD_ID', '1330127136262066197'),
+  ownerId: optional('OWNER_ID'),
+  allowedGuildId: optional('ALLOWED_GUILD_ID'),
   testGuildId: optional('TEST_GUILD_ID'),
 
   // Prefix
@@ -55,6 +55,18 @@ export function validateProductionConfig() {
     throw new Error(
       '❌ [Config] Missing CLIENT_ID in .env!\n' +
       'Vui lòng mở file .env và điền Application Client ID của Bot Discord.'
+    );
+  }
+  if (!process.env.OWNER_ID) {
+    throw new Error(
+      '❌ [Config] Missing OWNER_ID in .env!\n' +
+      'Vui lòng đặt Discord User ID của Bot Owner trước khi khởi động bot.'
+    );
+  }
+  if (!process.env.ALLOWED_GUILD_ID) {
+    throw new Error(
+      '❌ [Config] Missing ALLOWED_GUILD_ID in .env!\n' +
+      'Vui lòng đặt Discord Guild ID được phép sử dụng bot trước khi khởi động bot.'
     );
   }
 }

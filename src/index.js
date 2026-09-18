@@ -165,11 +165,17 @@ async function main() {
 
   // ─── Process Error Handling ───────────────────────────────────────────
   process.on('unhandledRejection', (reason) => {
-    logger.error('Process', `Unhandled Rejection: ${reason}`);
+    const msg = reason instanceof Error ? reason.stack || reason.message : String(reason);
+    logger.error('Process', `Unhandled Rejection: ${msg}`);
   });
 
   process.on('uncaughtException', (error) => {
-    logger.error('Process', `Uncaught Exception: ${error.message}`);
+    logger.error('Process', `FATAL Uncaught Exception: ${error?.stack || error?.message || error}`);
+    try {
+      flushDb();
+      client.destroy();
+    } catch {}
+    process.exit(1);
   });
 
   // ─── Graceful Shutdown ────────────────────────────────────────────────

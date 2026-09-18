@@ -1,24 +1,19 @@
+import { config } from '../config.js';
+
 /**
  * Bot Lock State Guard.
  * Controls exclusive admin lock mode (ni!lock / ni!unlock).
  */
 
 let isLocked = false;
-let adminUserId = null;
-
-const ADMIN_USERNAME = 'ninhisreal';
 
 /**
  * Check if a user is the authorized bot administrator.
  * @param {import('discord.js').User} user
  * @param {import('discord.js').Guild} [guild]
  */
-export function isBotAdmin(user, guild = null) {
-  if (!user) return false;
-  if (user.username?.toLowerCase() === ADMIN_USERNAME) return true;
-  if (adminUserId && user.id === adminUserId) return true;
-  if (guild && guild.ownerId === user.id) return true;
-  return false;
+export function isBotAdmin(user) {
+  return Boolean(config.ownerId && user?.id === config.ownerId);
 }
 
 /**
@@ -44,7 +39,6 @@ export function checkBotLock(user, guild = null) {
  */
 export function lockBot(user) {
   isLocked = true;
-  if (user?.id) adminUserId = user.id;
   return true;
 }
 
@@ -64,6 +58,6 @@ export function unlockBot(user) {
 export function getLockStatus() {
   return {
     isLocked,
-    adminUserId,
+    adminUserId: config.ownerId,
   };
 }
