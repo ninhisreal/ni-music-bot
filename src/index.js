@@ -5,6 +5,11 @@ import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 
 // ─── Auto-Detect FFmpeg for Termux / Linux / Windows ───────────────────
+const termuxBin = '/data/data/com.termux/files/usr/bin';
+if (fs.existsSync(termuxBin) && !process.env.PATH?.includes(termuxBin)) {
+  process.env.PATH = `${termuxBin}:${process.env.PATH || ''}`;
+}
+
 if (!process.env.FFMPEG_PATH) {
   const possiblePaths = [
     '/data/data/com.termux/files/usr/bin/ffmpeg',
@@ -23,6 +28,11 @@ if (!process.env.FFMPEG_PATH) {
       if (p && fs.existsSync(p)) process.env.FFMPEG_PATH = p;
     } catch {}
   }
+}
+
+import { FFmpeg } from '@discord-player/ffmpeg';
+if (process.env.FFMPEG_PATH) {
+  FFmpeg.sources.unshift({ name: process.env.FFMPEG_PATH, module: false });
 }
 
 import { Client, GatewayIntentBits, ActivityType } from 'discord.js';

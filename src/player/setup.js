@@ -1,6 +1,6 @@
 import { Player, onBeforeCreateStream } from 'discord-player';
 import playdl from 'play-dl';
-import ytdl from '@distube/ytdl-core';
+import { YoutubeiExtractor } from 'discord-player-youtubei';
 import {
   SoundCloudExtractor,
   SpotifyExtractor,
@@ -21,7 +21,7 @@ export function getPlayer() {
  * Studio-Grade Audio Engine — High-Definition 48kHz Stereo Pipeline.
  *
  * Full-Length Stream Processing:
- * 1. Native direct YouTube Streaming (play-dl / @distube/ytdl-core fallback).
+ * 1. Native YouTube streaming via YoutubeiExtractor (Innertube) & play-dl.
  * 2. Multi-Platform Stream Bridging (Spotify / YouTube / Apple Music / Deezer / SoundCloud).
  * 3. 8MB prefetch buffer (highWaterMark: 1 << 23) optimized for mobile/Termux stability.
  *
@@ -40,7 +40,7 @@ export async function setupPlayer(client) {
     },
   });
 
-  // Direct YouTube audio stream handler
+  // Direct audio stream handler
   onBeforeCreateStream(async (track) => {
     const url = track?.url;
     if (!url || typeof url !== 'string' || !url.startsWith('http')) return null;
@@ -53,19 +53,8 @@ export async function setupPlayer(client) {
       if (playStream?.stream) {
         return playStream.stream;
       }
-    } catch (err1) {
-      logger.warn('Stream', `play-dl stream notice for "${track.title}": ${err1.message}, trying ytdl fallback...`);
-    }
-
-    try {
-      return ytdl(url, {
-        filter: 'audioonly',
-        quality: 'highestaudio',
-        highWaterMark: 1 << 23,
-        dlChunkSize: 0,
-      });
-    } catch (err2) {
-      logger.error('Stream', `ytdl fallback failed for "${track.title}": ${err2.message}`);
+    } catch {
+      // play-dl failed, fall back to registered YoutubeiExtractor
     }
 
     return null;
@@ -73,6 +62,7 @@ export async function setupPlayer(client) {
 
   // Register standard lossless extractors
   const extractors = [
+    [YoutubeiExtractor, {}, 'YouTube (YouTubei)'],
     [SoundCloudExtractor, {}, 'SoundCloud'],
     [SpotifyExtractor, {}, 'Spotify'],
     [AppleMusicExtractor, {}, 'AppleMusic'],
