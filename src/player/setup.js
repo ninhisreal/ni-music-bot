@@ -1,4 +1,4 @@
-import { Player, onBeforeCreateStream } from 'discord-player';
+import { Player, onBeforeCreateStream, FFmpeg } from 'discord-player';
 import playdl from 'play-dl';
 import { YoutubeiExtractor } from 'discord-player-youtubei';
 import {
@@ -8,6 +8,13 @@ import {
   AttachmentExtractor,
 } from '@discord-player/extractor';
 import { logger } from '../utils/logger.js';
+
+// Ensure system / Termux FFmpeg path is registered at highest priority
+if (process.env.FFMPEG_PATH && FFmpeg?.sources) {
+  if (!FFmpeg.sources.some(s => s.name === process.env.FFMPEG_PATH)) {
+    FFmpeg.sources.unshift({ name: process.env.FFMPEG_PATH, module: false });
+  }
+}
 
 /** @type {Player} */
 let player;

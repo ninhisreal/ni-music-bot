@@ -30,10 +30,6 @@ if (!process.env.FFMPEG_PATH) {
   }
 }
 
-import { FFmpeg } from '@discord-player/ffmpeg';
-if (process.env.FFMPEG_PATH) {
-  FFmpeg.sources.unshift({ name: process.env.FFMPEG_PATH, module: false });
-}
 
 import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
 import { config, validateProductionConfig } from './config.js';
