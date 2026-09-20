@@ -69,7 +69,7 @@ export async function setupPlayer(client) {
 
   // Register standard lossless extractors
   const extractors = [
-    [YoutubeiExtractor, {}, 'YouTube (YouTubei)'],
+    [YoutubeiExtractor, { streamOptions: { useClient: 'IOS' } }, 'YouTube (YouTubei)'],
     [SoundCloudExtractor, {}, 'SoundCloud'],
     [SpotifyExtractor, {}, 'Spotify'],
     [AppleMusicExtractor, {}, 'AppleMusic'],

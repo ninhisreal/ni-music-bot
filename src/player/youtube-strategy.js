@@ -252,22 +252,7 @@ export async function searchByPlatform(player, query, platform = 'auto', options
       return [];
     }
 
-    // 2a. YouTube URL -> Extract metadata cleanly via oEmbed and keep URL exact
-    if (cleanQuery.includes('youtube.com') || cleanQuery.includes('youtu.be')) {
-      const oembed = await resolveYoutubeOEmbed(cleanQuery);
-      const metaTrack = new Track(player, {
-        title: oembed?.title || 'YouTube Track',
-        author: oembed?.author || 'YouTube',
-        url: cleanQuery,
-        thumbnail: oembed?.thumbnail || null,
-        source: 'youtube',
-        requestedBy: options.requestedBy,
-      });
-      setCache(cacheKey, [metaTrack]);
-      return [metaTrack];
-    }
-
-    // 2b. Direct search for other URLs (Spotify, SoundCloud, etc.)
+    // 2a. Direct search for URLs via player extractors (supports YouTube, Spotify, SoundCloud, Apple Music, Deezer)
     try {
       const res = await player.search(cleanQuery, options);
       if (res.hasTracks()) {
@@ -277,6 +262,22 @@ export async function searchByPlatform(player, query, platform = 'auto', options
       }
     } catch (err) {
       logger.warn('Search', `Direct URL extraction notice for ${cleanQuery}: ${err.message}`);
+    }
+
+    // 2b. Fallback for YouTube URL if extractor missed
+    if (cleanQuery.includes('youtube.com') || cleanQuery.includes('youtu.be')) {
+      const oembed = await resolveYoutubeOEmbed(cleanQuery);
+      const metaTrack = new Track(player, {
+        title: oembed?.title || 'YouTube Track',
+        author: oembed?.author || 'YouTube',
+        url: cleanQuery,
+        thumbnail: oembed?.thumbnail || null,
+        duration: '0:00',
+        source: 'youtube',
+        requestedBy: options.requestedBy,
+      });
+      setCache(cacheKey, [metaTrack]);
+      return [metaTrack];
     }
 
     return [];
